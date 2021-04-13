@@ -73,6 +73,13 @@ class Main():
                 for i in range(self.n_qubit // 2):
                     x_gate = X(i)
                     x_gate.update_quantum_state(state)
+            elif self.ansatz_type == 'UCC1':
+                state = QuantumStateGpu(self.n_qubit)
+                # set HF reference state
+                from qulacs.gate import X
+                for i in range(self.n_qubit // 2):
+                    x_gate = X(i)
+                    x_gate.update_quantum_state(state)
             else:
                 state = QuantumStateGpu(self.n_qubit)
         else:
@@ -81,6 +88,13 @@ class Main():
             if self.ansatz_type == 'HE':
                 state = QuantumState(self.n_qubit)
             elif self.ansatz_type == 'SYMP':
+                state = QuantumState(self.n_qubit)
+                # set HF reference state
+                from qulacs.gate import X
+                for i in range(self.n_qubit // 2):
+                    x_gate = X(i)
+                    x_gate.update_quantum_state(state)
+            elif self.ansatz_type == 'UCC1':
                 state = QuantumState(self.n_qubit)
                 # set HF reference state
                 from qulacs.gate import X

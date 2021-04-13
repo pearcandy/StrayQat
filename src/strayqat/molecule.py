@@ -56,14 +56,54 @@ class Main():
 
     def get_molecular_data(self):
         if self.n_active_orbitals == None:
-            return MolecularData(self.geometry, self.basis, self.multiplicity,
-                                 self.charge, self.description)
+            return MolecularData(geometry=self.geometry,
+                                 basis=self.basis,
+                                 multiplicity=self.multiplicity,
+                                 charge=self.charge)
         else:
-            return generate_molecular_hamiltonian(self.geometry, self.basis,
-                                                  self.multiplicity,
-                                                  self.charge,
-                                                  self.n_active_electrons,
-                                                  self.n_active_orbitals)
+            return generate_molecular_hamiltonian(
+                geometry=self.geometry,
+                basis=self.basis,
+                multiplicity=self.multiplicity,
+                charge=self.charge,
+                n_active_electrons=self.n_active_electrons,
+                n_active_orbitals=self.n_active_orbitals)
+
+    def get_qubit_hamiltonian(self):
+        molecule = self.get_molecular_data()
+        molscf = run_pyscf(molecule, run_scf=True, run_fci=False)
+        self.fermionic_hamiltonian = get_fermion_operator(
+            molscf.get_molecular_hamiltonian())
+        self.jw_hamiltonian = jordan_wigner(self.fermionic_hamiltonian)
+        return self.jw_hamiltonian
+
+    def run_qchem(self):
+        molecule = self.get_molecular_data()
+
+        from qulacs.observable import create_observable_from_openfermion_text
+
+        if self.n_active_orbitals == None:
+            molscf = run_pyscf(molecule, run_scf=True, run_fci=True)
+            self.n_qubits = molecule.n_qubits
+            self.n_electron = molscf.n_electrons
+            self.fci_energy = molscf.fci_energy
+            self.hf_energy = molscf.hf_energy
+            #self.fermionic_hamiltonian = get_fermion_operator(
+            #    molscf.get_molecular_hamiltonian())
+            #self.jw_hamiltonian = jordan_wigner(self.fermionic_hamiltonian)
+            #self.hamiltonian_matrix = get_sparse_operator(self.jw_hamiltonian)
+            #self.hamiltonian = create_observable_from_openfermion_text(
+            #    str(self.jw_hamiltonian))
+
+        else:
+            self.n_qubits = molecule.n_qubits
+            self.fermionic_hamiltonian = get_fermion_operator(molecule)
+            self.jw_hamiltonian = jordan_wigner(self.fermionic_hamiltonian)
+            self.hamiltonian_matrix = get_sparse_operator(self.jw_hamiltonian)
+            eigenenergies, eigenvecs = eigs(self.hamiltonian_matrix)
+            self.fci_energy = np.real(eigenenergies[0])
+            #self.hamiltonian = create_observable_from_openfermion_text(
+            #    str(self.jw_hamiltonian))
 
     def run_scf(self):
         molecule = self.get_molecular_data()
@@ -71,7 +111,7 @@ class Main():
         from qulacs.observable import create_observable_from_openfermion_text
 
         if self.n_active_orbitals == None:
-            molscf = run_pyscf(molecule, run_scf=1, run_fci=1)
+            molscf = run_pyscf(molecule, run_scf=True, run_fci=True)
             self.n_qubits = molecule.n_qubits
             self.n_electron = molscf.n_electrons
             self.fci_energy = molscf.fci_energy
