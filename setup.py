@@ -21,7 +21,7 @@ def _requires_from_file(filename):
 
 setup(
     name="strayqat",
-    version="0.2.0",
+    version="0.2.3",
     license="GNU lv3",
     description="Tools for quantum chemistry with quantum computer",
     long_description="README.md",
